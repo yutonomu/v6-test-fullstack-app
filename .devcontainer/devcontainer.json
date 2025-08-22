@@ -7,7 +7,13 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        "golang.go"
+        "golang.go",
+        "eamodio.gitlens",
+        "mhutchie.git-graph",
+        "bradlc.vscode-tailwindcss",
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "oderwat.indent-rainbow"
       ]
     }
   },
