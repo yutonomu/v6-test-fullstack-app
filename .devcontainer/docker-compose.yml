@@ -1,0 +1,64 @@
+services:
+  # アプリケーション本体のサービス
+  app:
+    build: .
+    container_name: next-go-app
+    # ローカルのコード変更を即座にコンテナへ反映させるための設定
+    volumes:
+      - ..:/workspace:cached
+    env_file:
+      - .env
+    ports:
+      # Goバックエンド用: PCの8080番ポートをコンテナの8080番へ転送
+      - "8080:8080"
+      # Next.jsフロントエンド用: PCの3000番ポートをコンテナの3000番へ転送
+      - "3000:3000"
+    # 開発用にコンテナを起動し続けるためのコマンド
+    command: sleep infinity
+    # DBサービスのヘルスチェックが完了するまでappの起動を待機させる
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # データベースのサービス
+  db:
+    image: postgres:latest
+    container_name: postgres
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+    # コンテナを削除してもDBのデータが消えないように永続化する設定
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    # コンテナが正常にDB接続を受け付ける状態かを確認する
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nextjs_user -d nextjs_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # データベース管理ツール pgAdmin
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin4
+    restart: unless-stopped
+    # ログイン情報などを.envファイルから設定
+    env_file:
+      - .env
+    # PCの5050番ポートからアクセスできるようにする
+    ports:
+      - "5050:80"
+    # pgAdmin自体の設定（サーバー接続情報など）を永続化する
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    # DBサービスの起動が完了してから、このサービスを起動する
+    depends_on:
+      db:
+        condition: service_healthy
+
+# DBのデータを永続化するために使用する名前付きボリュームを宣言
+volumes:
+  postgres-data:
+  pgadmin-data:

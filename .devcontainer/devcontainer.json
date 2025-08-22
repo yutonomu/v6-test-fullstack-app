@@ -1,0 +1,20 @@
+{
+  "name": "Go/Next.js Development",
+  "dockerComposeFile": "./docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspace",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "golang.go"
+      ]
+    }
+  },
+  
+  // "postCreateCommand" を修正: concurrentlyをグローバルインストールする
+  "postCreateCommand": "npm install -g concurrently && cd backend && go mod tidy && go mod download && cd ../frontend && npm install",
+
+  // "postAttachCommand" を修正: concurrentlyで2つのコマンドを並列実行する
+  "postAttachCommand": "concurrently \"cd backend && air -c .air.toml\" \"cd frontend && npm run dev\""
+}
