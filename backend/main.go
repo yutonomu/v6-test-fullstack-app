@@ -10,31 +10,32 @@ import (
 	"gorm.io/gorm"
 )
 
-// main: エントリポイント。設定読み込み、DB初期化、ルーター配線、サーバ起動のみを担当します。
 func main() {
-	// .env読み込み（backend/.env → プロジェクト直下../.env の順で試行）
+	// ローカル開発用に.envファイルを読み込む（本番環境では無視される）
 	_ = godotenv.Load("../.env")
 
-	// DB接続文字列の決定（環境変数優先、なければ推測）
-	// dsn := os.Getenv("DATABASE_URL")
-	// if dsn == "" {
-	// 	dsn = inferDSNFromEnv()
-	// 	if dsn != "" {
-	// 		log.Printf("DATABASE_URL を環境から推測: %s", redactPassword(dsn))
-	// 	}
-	// }
-	// if dsn == "" {
-	// 	log.Fatal("DATABASE_URL が必要です (例: postgres://user:pass@host:5432/db?sslmode=disable)")
-	// }
+	// --- 接続文字列 (DSN) の決定 ---
+	// 優先度1: DATABASE_URL (本番環境: Supabaseの接続文字列)
+	dsn := os.Getenv("DATABASE_URL")
 
-	dbHost := os.Getenv("APP_DB_HOST")
-	dbUser := os.Getenv("APP_DB_USER")
-	dbPassword := os.Getenv("APP_DB_PASSWORD")
-	dbName := os.Getenv("APP_DB_NAME")
-	dbPort := os.Getenv("APP_DB_PORT")
+	// 優先度2: ローカル開発用の環境変数 (APP_DB_*)
+	if dsn == "" {
+		log.Println("DATABASE_URL is not set, falling back to local Docker setup...")
+		dbHost := os.Getenv("APP_DB_HOST")
+		dbUser := os.Getenv("APP_DB_USER")
+		dbPassword := os.Getenv("APP_DB_PASSWORD")
+		dbName := os.Getenv("APP_DB_NAME")
+		dbPort := os.Getenv("APP_DB_PORT")
 
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		dbHost, dbPort, dbUser, dbPassword, dbName)
+		if dbUser != "" && dbName != "" && dbHost != "" {
+			dsn = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+				dbHost, dbPort, dbUser, dbPassword, dbName)
+		}
+	}
+
+	if dsn == "" {
+		log.Fatal("Database connection string is not configured. Set DATABASE_URL or APP_DB_* variables.")
+	}
 
 	// DB接続
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
@@ -42,12 +43,12 @@ func main() {
 		log.Fatalf("DB接続失敗: %v", err)
 	}
 
-	// マイグレーション（Noteテーブル）
+	// マイグレーション
 	if err := db.AutoMigrate(&Note{}); err != nil {
 		log.Fatalf("マイグレーション失敗: %v", err)
 	}
 
-	// ルーター生成（Gin + CORS + ハンドラ配線）
+	// ルーター生成
 	router := NewRouter(db)
 
 	// ポート決定と起動
