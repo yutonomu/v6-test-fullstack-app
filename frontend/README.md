@@ -1,8 +1,24 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Notes Feature
+
+This app proxies a Go backend (in `../backend`) that serves notes over HTTP.
+
+- API route: `src/app/api/notes/route.ts` proxies `GET /notes` and `POST /notes` to the backend defined by `BACKEND_URL`.
+- UI: `src/app/page.tsx` shows the list of notes and a Tailwind-styled form. The form uses a Server Action to create notes and revalidate the page.
+
+Configure environment variables by copying `.env.local.example` to `.env.local` and setting:
+
+```
+BACKEND_URL=http://localhost:8080
+# OPTIONAL: NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+Run the Go backend separately so the API route can reach it.
+
 ## Getting Started
 
-First, run the development server:
+Run the development server:
 
 ```bash
 npm run dev
@@ -14,7 +30,7 @@ pnpm dev
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) with your browser. You should see the notes list and form.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 

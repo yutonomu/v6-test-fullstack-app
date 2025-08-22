@@ -1,16 +1,7 @@
-import type { NextConfig } from 'next';
-
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:8080';
+import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  async rewrites() {
-    return [
-      {
-        source: '/api/notes',
-        destination: `${API_BASE_URL}/notes`,
-      },
-    ];
-  },
+  allowedDevOrigins: ["http://localhost:3000"],
 };
 
 export default nextConfig;
