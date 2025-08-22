@@ -1,0 +1,13 @@
+export const metadata = {
+  title: 'Notes minimal',
+  description: 'Frontend → Backend (Go) → Postgres',
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="ja">
+      <body style={{ fontFamily: 'system-ui, sans-serif' }}>{children}</body>
+    </html>
+  );
+}
+
