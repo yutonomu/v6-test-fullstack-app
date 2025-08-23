@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
@@ -38,9 +39,24 @@ func main() {
 	}
 
 	// DB接続
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	var db *gorm.DB
+	var err error
+
+	// 接続リトライ処理を追加
+	for i := 0; i < 5; i++ {
+		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		if err == nil {
+			log.Println("Successfully connected to the database.")
+			break
+		}
+		log.Printf("Failed to connect to database (attempt %d/5): %v", i+1, err)
+		log.Println("Retrying in 5 seconds...")
+		time.Sleep(5 * time.Second)
+	}
+
+	// 5回リトライしても接続できなかった場合は終了する
 	if err != nil {
-		log.Fatalf("DB接続失敗: %v", err)
+		log.Fatalf("Could not connect to the database after several retries: %v", err)
 	}
 
 	// マイグレーション
